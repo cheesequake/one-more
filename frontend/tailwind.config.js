@@ -8,6 +8,7 @@ export default {
     extend: {
       colors: {
         'primary-riot': "#ff4654",
+        'secondary-riot': "#0f1923",
       },
       fontFamily: {
         'Tungsten': ['"Tungsten"', 'sans-serif'],

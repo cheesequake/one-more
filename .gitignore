@@ -1,6 +1,8 @@
 node_modules
 *.log
 
+.env
+
 # @vitjs/vit temporary directory
 .vit
 
@@ -40,3 +42,5 @@ typings/
 
 # Yarn Integrity file
 .yarn-integrity
+
+__pycache__/
