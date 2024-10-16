@@ -5,6 +5,7 @@ import onemore from "../../assets/one-more-light.png"
 export default function About () {
     return (
         <motion.div
+        key="about"
         initial={{ opacity: 0, y: 50 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}

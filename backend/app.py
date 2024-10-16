@@ -4,6 +4,10 @@ import os
 from dotenv import load_dotenv
 import mysql.connector
 from mysql.connector import Error
+from pydantic import BaseModel
+from langchain_community.utilities.sql_database import SQLDatabase
+from langchain_aws import ChatBedrock
+from langchain.chains.sql_database.query import create_sql_query_chain
 
 load_dotenv()
 
@@ -27,6 +31,14 @@ app.add_middleware (
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+)
+
+class QueryRequest(BaseModel):
+    query: str
+
+llm = ChatBedrock (
+    model="amazon.titan-text-express-v1",
+    model_kwargs={"temperature": 0},
 )
 
 def connect_to_rds ():
@@ -124,3 +136,17 @@ async def get_league(leagueId: int = Path(..., description="ID of the league to 
 
     league['league_id'] = str(league['league_id'])
     return {"league": league}
+
+@app.post("/generate_response")
+async def generate_response(request: QueryRequest):
+    query = request.query
+
+    db = SQLDatabase.from_uri (f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}")
+
+    generate_query = create_sql_query_chain (llm, db)
+    generated_query = generate_query.invoke ({"question": "Name 4 teams which played in Americas? Only give the query, no wrapper text. No need of SQLQuery: "})
+
+    response_data = f"{generated_query}"
+
+    # Return the response
+    return response_data

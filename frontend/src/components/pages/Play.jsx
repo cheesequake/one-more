@@ -30,7 +30,7 @@ export default function Play () {
         const newMessages = [...messages, { sender: 'user', text: query }]
         setMessages (newMessages)
 
-        await axios.get ("http://localhost:8080/message")
+        await axios.post (import.meta.env.VITE_BACKEND_URL+"generate_response", {query: query})
         .then (response => {
             setMessages ((prevMessages) => [
                 ...prevMessages,
@@ -40,7 +40,7 @@ export default function Play () {
         .catch (() => {
             setMessages ((prevMessages) => [
                 ...prevMessages,
-                { sender: 'server', text: response.data }
+                { sender: 'server', text: "Sorry, I think I'll need a Tech Pause." }
             ])
         })
 
@@ -50,6 +50,7 @@ export default function Play () {
 
     return (
         <motion.div
+        key="play"
         initial={{ opacity: 0, y: 50 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.75, stiffness: 0 }}

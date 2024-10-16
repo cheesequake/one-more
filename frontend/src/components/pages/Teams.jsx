@@ -71,7 +71,10 @@ export default function Teams () {
     return (
         <>
             {showOverlay &&
-            <motion.div className="w-screen h-screen min-h-screen flex justify-center items-center absolute top-0 left-0 z-10 backdrop-blur-lg" onClick={() => {setShowOverlay (false)}}>
+            <motion.div
+            key="leaguesOverlay" 
+            className="w-screen h-screen min-h-screen flex justify-center items-center absolute top-0 left-0 z-10 backdrop-blur-lg"
+            onClick={() => {setShowOverlay (false)}}>
                 <div className="h-5/6 w-5/6 flex flex-wrap justify-center items-center overflow-y-scroll bg-secondary-riot rounded-lg" onClick={(e) => {e.stopPropagation()}}>
                     {leagues.map ((league) => (
                         <div className="flex flex-wrap p-2 m-1 cursor-pointer justify-center hover:bg-slate-950 hover:border-slate-600 duration-100 items-center border border-white rounded-md" key={league.league_id} onClick={() => {
