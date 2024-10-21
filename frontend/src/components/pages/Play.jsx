@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react"
 
 export default function Play () {
     const [animating, setAnimating] = useState (true)
+    const [lock, setLock] = useState (false)
     const [query, setQuery] = useState ("")
     const [messages, setMessages] = useState ([])
     const messagesEndRef = useRef (null)
@@ -25,7 +26,11 @@ export default function Play () {
     }, [])
 
     const handleQuery = async () => {
-        if (!query.trim()) return;
+        setLock (true)
+        if (!query.trim()) {
+            setLock (false)
+            return;
+        }
 
         const newMessages = [...messages, { sender: 'user', text: query }]
         setMessages (newMessages)
@@ -36,12 +41,14 @@ export default function Play () {
                 ...prevMessages,
                 { sender: 'server', text: response.data }
             ])
+            setLock (false)
         })
         .catch (() => {
             setMessages ((prevMessages) => [
                 ...prevMessages,
                 { sender: 'server', text: "Sorry, I think I'll need a Tech Pause." }
             ])
+            setLock (false)
         })
 
         scrollTo
@@ -70,8 +77,8 @@ export default function Play () {
                     <div ref={messagesEndRef} className="min-h-2 max-h-2" />
                 </div>
                 <div className="w-full flex justify-around items-center">
-                    <input type="text" className="w-9/12 p-1 h-8" placeholder="Enter a query" onChange={(e) => { setQuery (e.target.value) }} />
-                    <button className="w-2/12 bg-primary-riot h-8 rounded-sm font-Tungsten text-white text-3xl flex justify-center items-center" onClick={handleQuery}>
+                    <input type="text" className="w-9/12 p-1 h-8" placeholder="Enter a query" value={query} onChange={(e) => { setQuery (e.target.value) }} />
+                    <button className={`w-2/12 h-8 rounded-sm font-Tungsten text-3xl flex justify-center items-center ${lock ? 'bg-gray-400 text-gray-300 cursor-not-allowed' : 'bg-primary-riot text-white hover:text-secondary-riot'}`}  onClick={handleQuery} disabled={lock} >
                         ASK
                     </button>
                 </div>

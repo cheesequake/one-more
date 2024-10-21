@@ -86,7 +86,7 @@ async def get_teams(leagueId: int = Query(..., description="ID of the league to 
 
     for team in teams:
         team['team_id'] = str(team['team_id'])
-    return {"teams": teams}
+    return teams
 
 # Get all leagues information
 @app.get("/leagues")
@@ -112,7 +112,7 @@ async def get_league():
     for league in leagues:
         league['league_id'] = str(league['league_id'])
 
-    return {"leagues": leagues}
+    return leagues
 
 # Get league information by league ID
 @app.get("/leagues/{leagueId}")
@@ -135,18 +135,42 @@ async def get_league(leagueId: int = Path(..., description="ID of the league to 
         raise HTTPException(status_code=404, detail="League not found")
 
     league['league_id'] = str(league['league_id'])
-    return {"league": league}
+    return league
+
+# Allowed values for each parameter
+allowedLevels = ["professional", "semi-professional", "game-changer"]
+allowedIgls = ["yes", "no", "any"]
+allowedRoles = ["duelist", "initiator", "controller", "sentinel"]
+allowedSortBy = ["name", "attacking-kda", "defending-kda", "kills", "deaths", "assists", "year", "team"]
+allowedSortOrder = ["ASC", "DESC"]
+
+@app.get("/players")
+def get_players(
+    level: str = Query(..., description="The level of the player (e.g., professional)"),
+    igl: str = Query(..., description="The IGL status of the player"),
+    role: str = Query(..., description="The role of the player (e.g., duelist, initiator)"),
+    sortBy: str = Query(..., description="Field to sort by (e.g., name, kda)"),
+    sortOrder: str = Query(..., description="Sort order, either ASC or DESC")
+):
+    # Validation for each parameter
+    if level not in allowedLevels:
+        raise HTTPException(status_code=400, detail=f"Invalid level. Allowed values: {allowedLevels}")
+
+    if igl not in allowedIgls:
+        raise HTTPException(status_code=400, detail=f"Invalid igl. Allowed values: {allowedIgls}")
+
+    if role not in allowedRoles:
+        raise HTTPException(status_code=400, detail=f"Invalid role. Allowed values: {allowedRoles}")
+
+    if sortBy not in allowedSortBy:
+        raise HTTPException(status_code=400, detail=f"Invalid sortBy. Allowed values: {allowedSortBy}")
+
+    if sortOrder not in allowedSortOrder:
+        raise HTTPException(status_code=400, detail=f"Invalid sortOrder. Allowed values: {allowedSortOrder}")
+
+    return None
 
 @app.post("/generate_response")
 async def generate_response(request: QueryRequest):
-    query = request.query
 
     db = SQLDatabase.from_uri (f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}")
-
-    generate_query = create_sql_query_chain (llm, db)
-    generated_query = generate_query.invoke ({"question": "Name 4 teams which played in Americas? Only give the query, no wrapper text. No need of SQLQuery: "})
-
-    response_data = f"{generated_query}"
-
-    # Return the response
-    return response_data

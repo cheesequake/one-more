@@ -37,9 +37,9 @@ export default function Teams () {
         const getLeagueData = async (leagueId) => {
             try {
                 const leagueResponse = await axios.get (import.meta.env.VITE_BACKEND_URL+`leagues/${leagueId}`)
-                setLeague (leagueResponse.data.league)
+                setLeague (leagueResponse.data)
                 const teamResponse = await axios.get (import.meta.env.VITE_BACKEND_URL+`teams?leagueId=${leagueId}`)
-                setTeams (teamResponse.data.teams)
+                setTeams (teamResponse.data)
                 setIsLoading (false)
             }
             catch (error) {
@@ -72,8 +72,11 @@ export default function Teams () {
         <>
             {showOverlay &&
             <motion.div
-            key="leaguesOverlay" 
+            key="leaguesOverlay"
             className="w-screen h-screen min-h-screen flex justify-center items-center absolute top-0 left-0 z-10 backdrop-blur-lg"
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.75, stiffness: 0 }}
             onClick={() => {setShowOverlay (false)}}>
                 <div className="h-5/6 w-5/6 flex flex-wrap justify-center items-center overflow-y-scroll bg-secondary-riot rounded-lg" onClick={(e) => {e.stopPropagation()}}>
                     {leagues.map ((league) => (
