@@ -8,14 +8,13 @@ import Play from "./components/pages/Play"
 import Players from "./components/pages/Players"
 import Teams from "./components/pages/Teams"
 import NotFound from "./components/pages/NotFound"
-import { AnimatePresence } from "framer-motion"
 
 function App() {
   const videoRef = useRef (null)
   const [muted, setMuted] = useState (true)
 
   return (
-    <AnimatePresence>
+    <div className="overflow-hidden">
       <video ref={videoRef} src={videoBG} autoPlay loop muted={muted} className="h-full w-full object-cover absolute top-0 left-0 -z-10" />
       <Navbar muted={muted} setMuted={setMuted} />
       <div className="w-full min-h-90vh h-90vh flex justify-center items-start">
@@ -33,7 +32,7 @@ function App() {
             </Routes>
         </div>
       </div>
-    </AnimatePresence>
+    </div>
   )
 }
 

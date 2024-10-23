@@ -1,7 +1,7 @@
 import axios from "axios"
 import { useEffect, useState } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
-import { motion } from "framer-motion"
+import { AnimatePresence, motion } from "framer-motion"
 import TeamElement from "../elements/TeamElement"
 import loadingAnimation from "../../assets/LoadingAnimation.gif"
 
@@ -20,7 +20,7 @@ export default function Teams () {
         const getLeagues = async () => {
             try {
                 const leaguesResponse = await axios.get (import.meta.env.VITE_BACKEND_URL+`leagues`)
-                setLeagues (leaguesResponse.data.leagues)
+                setLeagues (leaguesResponse.data)
             }
             catch {
                 console.log ("Error getting leagues")
@@ -69,7 +69,7 @@ export default function Teams () {
     }
 
     return (
-        <>
+        <AnimatePresence>
             {showOverlay &&
             <motion.div
             key="leaguesOverlay"
@@ -93,7 +93,7 @@ export default function Teams () {
             </motion.div>}
             <div className="w-11/12 h-15/16 flex flex-col justify-start items-center">
                 <div className="flex w-full justify-between items-center">
-                    <div className="w-10/12">
+                    <div className="w-3/4">
                         <input type="text" className="w-full h-10 rounded-sm px-2 bg-white bg-opacity-75 focus:border-2 focus:border-primary-riot focus:outline-none" placeholder="Filter results" value={searchTerm} onChange={(e) => {setSearchTerm (e.target.value)}} />
                     </div>
                     <div className="flex justify-center items-center text-white bg-secondary-riot bg-opacity-75 hover:bg-opacity-100 duration-100 rounded-sm h-10 px-2 cursor-pointer border hover:border-primary-riot" onClick={handleLeagueChange}>
@@ -105,10 +105,10 @@ export default function Teams () {
                 </div>
                 <div className="w-full flex flex-wrap items-start overflow-y-scroll">
                     {!isLoading ? filteredTeams.map ((team) => (
-                        <TeamElement key={team.team_id} team={team} />
+                        <TeamElement key={team.team_id} team={team} imgsrc={league.league_logo_url} />
                     )) : <div className="w-full h-full flex justify-center items-center"><img className="h-1/3" src={loadingAnimation} /></div>}
                 </div>
             </div>
-        </>
+        </AnimatePresence>
     )
 }

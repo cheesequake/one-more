@@ -32,8 +32,28 @@ const agentImageMap = {
     "Raze": Raze,
     "Reyna": Reyna,
     "Yoru": Yoru,
-    "Phoenix": Phoenix
-}
+    "Phoenix": Phoenix,
+    "Neon": Neon,
+    "Breach": Breach,
+    "Skye": Skye,
+    "Sova": Sova,
+    "Kayo": Kayo,
+    "Killjoy": Killjoy,
+    "Cypher": Cypher,
+    "Sage": Sage,
+    "Chamber": Chamber,
+    "Omen": Omen,
+    "Brimstone": Brimstone,
+    "Astra": Astra,
+    "Viper": Viper,
+    "Fade": Fade,
+    "Harbor": Harbor,
+    "Gekko": Gekko,
+    "Deadlock": Deadlock,
+    "Iso": Iso,
+    "Clove": Clove,
+    "Vyse": Vyse
+};
 
 export default function SelectedPlayerElement ({ player }) {
 
@@ -56,7 +76,7 @@ export default function SelectedPlayerElement ({ player }) {
                         {player.team_acronym +" "+ player.in_game_name}
                     </div>
                     <div className="font-light text-lg flex items-center">
-                        {player.real_name} {player.in_game_leader && <img src={crown} className="h-4 ml-2" />} {player.status === "Active" && <img src={active} className="h-4 ml-2" />}
+                        {player.real_name} {player.in_game_leader === 1 && <img src={crown} className="h-4 ml-2" />} {player.status === "active" && <img src={active} className="h-4 ml-2" />}
                     </div>
                 </div>
                 <StatKeyValueElement stat="Games Played: " value={player.total_matches_played} />
@@ -72,12 +92,13 @@ export default function SelectedPlayerElement ({ player }) {
                 <StatKeyValueElement stat="4Ks: " value={player.four_kills} />
                 <StatKeyValueElement stat="Operator Kills: " value={player.operator_kills} />
                 <StatKeyValueElement stat="Pistol Kills: " value={player.pistol_kills} />
+                <StatKeyValueElement stat="Years Active: " value={player.years_active} />
             </div>
             <div className="h-full flex flex-col justify-start items-center">
                 <img src={agentImage} className="h-13/16" />
                 <div className="flex flex-col justify-start items-center text-white">
                     <StatKeyValueElement stat="Most Played Agent: " value={player.agent_name} />
-                    <StatKeyValueElement stat={`KDA as ${player.agent_name}: `} value={player.KDA_ratio} />
+                    <StatKeyValueElement stat={`KDA as ${player.agent_name}: `} value={player.KDA_as_agent} />
                 </div>
             </div>
         </div>
