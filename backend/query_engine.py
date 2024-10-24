@@ -24,6 +24,9 @@ DB_PASSWORD = os.getenv("DB_PASSWORD")
 DB_NAME = os.getenv("DB_NAME")
 DB_PORT = os.getenv("DB_PORT")
 
+AWS_ACCESS_KEY_ID = os.getenv ("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = os.getenv ("AWS_SECRET_ACCESS_KEY")
+
 REGION = os.getenv ("REGION")
 SQL_MODEL = os.getenv ("SQL_MODEL")
 FINAL_MODEL = os.getenv ("FINAL_MODEL")
@@ -32,7 +35,9 @@ def get_bedrock_client():
     bedrock_config = botocore.config.Config(read_timeout=900, connect_timeout=900, region_name=REGION)
     return boto3.client(
         service_name = "bedrock-runtime",
-        config=bedrock_config
+        config=bedrock_config,
+        aws_access_key_id = AWS_ACCESS_KEY_ID,
+        aws_secret_access_key = AWS_SECRET_ACCESS_KEY
     )
 
 def generate_few_shot_prompt (query):
@@ -104,7 +109,7 @@ def run_query_engine (query):
     prompt = generate_few_shot_prompt (query)
 
     sql_query = get_sql_query_response (prompt)
-
+    print (sql_query)
     data = query_db (sql_query)
 
     analysis_prompt = constants.DATA_ANALYST_PROMPT.format (query=query, sql_query=sql_query, data=data)
