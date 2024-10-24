@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+python-dotenv
+boto3
+botocore
+pydantic
+langchain-aws
+langchain-community
+langchain-core
+langchain-huggingface
+sentence-transformers
+faiss-cpu
+regex
