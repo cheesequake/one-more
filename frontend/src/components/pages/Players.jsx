@@ -50,9 +50,9 @@ export default function Players () {
                     sortBy: sortBy,
                     sortOrder: sortOrder
                 }
-                console.log ("Yo?")
+
                 const playerResponse = await axios.get (import.meta.env.VITE_BACKEND_URL+"players", { params })
-                console.log ("Yo2?")
+
                 setPlayers (playerResponse.data)
 
                 setIsLoading (false)
