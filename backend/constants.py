@@ -863,6 +863,234 @@ ORDER BY RAND()
 LIMIT 1
 );
 """
+            },
+            {
+                "input": "Who played for Evil Geniuses in the year 2023? What roles did each player have?",
+                "query": """
+SELECT
+p.*,
+a.role AS assigned_role
+FROM players p
+JOIN agents a ON p.most_played_agent_id = a.agent_id
+JOIN teams t ON p.home_team_id = t.team_id
+WHERE t.team_name = 'Evil Geniuses'
+AND p.years_active LIKE '%2023%';
+"""
+            },
+            {
+                "input": "Compare G2's team to Sentinels team in the year 2023. Discuss each role and which team is likely to win",
+                "query": """
+SELECT 
+p.*,
+t.team_name,
+a.role AS assigned_role
+FROM players p
+JOIN agents a ON p.most_played_agent_id = a.agent_id
+JOIN teams t ON p.home_team_id = t.team_id
+JOIN player_agent_wise_stats ps ON p.player_id = ps.player_id AND a.agent_id = ps.agent_id
+WHERE t.team_name IN ('G2 Esports', 'Sentinels')
+AND p.years_active LIKE '%2023%'
+ORDER BY t.team_name, a.role;
+"""
+            },
+            {
+                "input": "Build a team of players each from a different region. Assign them roles and discuss why this composition is good",
+                "query": """
+(
+SELECT 
+    p.*, 
+    a.agent_name, 
+    'duelist' AS assigned_role, 
+    s.KDA_as_agent, 
+    s.matches_played_as_agent
+FROM players p
+JOIN agents a ON p.most_played_agent_id = a.agent_id
+JOIN player_agent_wise_stats s ON p.player_id = s.player_id AND a.agent_id = s.agent_id
+WHERE a.role = 'duelist'
+AND p.region LIKE '%BR%'
+ORDER BY RAND()
+LIMIT 1
+)
+
+UNION
+
+(
+SELECT 
+    p.*, 
+    a.agent_name, 
+    'sentinel' AS assigned_role, 
+    s.KDA_as_agent, 
+    s.matches_played_as_agent
+FROM players p
+JOIN agents a ON p.most_played_agent_id = a.agent_id
+JOIN player_agent_wise_stats s ON p.player_id = s.player_id AND a.agent_id = s.agent_id
+WHERE a.role = 'sentinel'
+AND p.region LIKE '%NA%'
+ORDER BY RAND()
+LIMIT 1
+)
+
+UNION
+
+(
+SELECT 
+    p.*, 
+    a.agent_name, 
+    'controller' AS assigned_role, 
+    s.KDA_as_agent, 
+    s.matches_played_as_agent
+FROM players p
+JOIN agents a ON p.most_played_agent_id = a.agent_id
+JOIN player_agent_wise_stats s ON p.player_id = s.player_id AND a.agent_id = s.agent_id
+WHERE a.role = 'controller'
+AND p.region LIKE '%EMEA%'
+ORDER BY RAND()
+LIMIT 1
+)
+
+UNION
+
+(
+SELECT 
+    p.*, 
+    a.agent_name, 
+    'initiator' AS assigned_role, 
+    s.KDA_as_agent, 
+    s.matches_played_as_agent
+FROM players p
+JOIN agents a ON p.most_played_agent_id = a.agent_id
+JOIN player_agent_wise_stats s ON p.player_id = s.player_id AND a.agent_id = s.agent_id
+WHERE a.role = 'initiator'
+AND p.region LIKE '%SEA%'
+ORDER BY RAND()
+LIMIT 1
+)
+
+UNION
+
+(
+SELECT 
+    p.*, 
+    a.agent_name, 
+    'IGL' AS assigned_role, 
+    s.KDA_as_agent, 
+    s.matches_played_as_agent
+FROM players p
+JOIN agents a ON p.most_played_agent_id = a.agent_id
+JOIN player_agent_wise_stats s ON p.player_id = s.player_id AND a.agent_id = s.agent_id
+WHERE p.in_game_leader = 1
+AND p.region LIKE '%LATAM%'
+ORDER BY RAND()
+LIMIT 1
+);
+"""
+            },
+            {
+                "input": "Generate a team of players from VCT International, but do not include anyone from Evil Geniuses. Assign them roles and discuss the composition",
+                "query": """
+(
+SELECT 
+p.*, 
+a.agent_name, 
+'duelist' AS assigned_role,
+t.team_name,
+s.KDA_as_agent, 
+s.matches_played_as_agent
+FROM players p
+JOIN agents a ON p.most_played_agent_id = a.agent_id
+JOIN player_agent_wise_stats s ON p.player_id = s.player_id AND a.agent_id = s.agent_id
+JOIN teams t ON p.home_team_id = t.team_id
+WHERE a.role = 'duelist'
+AND p.level = 'VCT International'
+AND t.team_name <> 'Evil Geniuses'
+ORDER BY RAND()
+LIMIT 1
+)
+
+UNION
+
+(
+SELECT 
+p.*, 
+a.agent_name, 
+'sentinel' AS assigned_role, 
+t.team_name,
+s.KDA_as_agent, 
+s.matches_played_as_agent
+FROM players p
+JOIN agents a ON p.most_played_agent_id = a.agent_id
+JOIN player_agent_wise_stats s ON p.player_id = s.player_id AND a.agent_id = s.agent_id
+JOIN teams t ON p.home_team_id = t.team_id
+WHERE a.role = 'sentinel'
+AND p.level = 'VCT International'
+AND t.team_name <> 'Evil Geniuses'
+ORDER BY RAND()
+LIMIT 1
+)
+
+UNION
+
+(
+SELECT 
+p.*, 
+a.agent_name, 
+'controller' AS assigned_role, 
+t.team_name,
+s.KDA_as_agent, 
+s.matches_played_as_agent
+FROM players p
+JOIN agents a ON p.most_played_agent_id = a.agent_id
+JOIN player_agent_wise_stats s ON p.player_id = s.player_id AND a.agent_id = s.agent_id
+JOIN teams t ON p.home_team_id = t.team_id
+WHERE a.role = 'controller'
+AND p.level = 'VCT International'
+AND t.team_name <> 'Evil Geniuses'
+ORDER BY RAND()
+LIMIT 1
+)
+
+UNION
+
+(
+SELECT 
+p.*, 
+a.agent_name, 
+'initiator' AS assigned_role,
+t.team_name, 
+s.KDA_as_agent, 
+s.matches_played_as_agent
+FROM players p
+JOIN agents a ON p.most_played_agent_id = a.agent_id
+JOIN player_agent_wise_stats s ON p.player_id = s.player_id AND a.agent_id = s.agent_id
+JOIN teams t ON p.home_team_id = t.team_id
+WHERE a.role = 'initiator'
+AND p.level = 'VCT International'
+AND t.team_name <> 'Evil Geniuses'
+ORDER BY RAND()
+LIMIT 1
+)
+
+UNION
+
+(
+SELECT 
+p.*, 
+a.agent_name, 
+'IGL' AS assigned_role,
+t.team_name,
+s.KDA_as_agent, 
+s.matches_played_as_agent
+FROM players p
+JOIN agents a ON p.most_played_agent_id = a.agent_id
+JOIN player_agent_wise_stats s ON p.player_id = s.player_id AND a.agent_id = s.agent_id
+JOIN teams t ON p.home_team_id = t.team_id
+WHERE p.in_game_leader = 1
+AND p.level = 'VCT International'
+AND t.team_name <> 'Evil Geniuses'
+ORDER BY RAND()
+LIMIT 1
+);
+"""
             }
         ]
 
