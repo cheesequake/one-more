@@ -28,9 +28,7 @@ def get_bedrock_client():
     bedrock_config = botocore.config.Config(read_timeout=900, connect_timeout=900, region_name="ap-south-1")
     return boto3.client(
         service_name = "bedrock-runtime",
-        config=bedrock_config,
-        aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
-        aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
+        config=bedrock_config
     )
 
 def generate_few_shot_prompt (query):
@@ -51,7 +49,7 @@ def generate_few_shot_prompt (query):
                 example_selector=example_selector,
                 example_prompt=example_prompt,
                 prefix=constants.FEW_SHOT_PREFIX,
-                suffix="User input: {input}\nSQL query: ",
+                suffix="Generate an SQL query without extra text for User input: {input}\nSQL query: ",
                 input_variables=["input", "top_k", "table_info"],
             )
 
@@ -79,15 +77,15 @@ def is_write_query(sql_query: str) -> bool:
 
     return False
 
-def clean_sql_query (unclean_query):
-    sql_pattern = r'```sql(.*?)```'
+def clean_sql_query(unclean_query):
+    sql_pattern = r'(\(?SELECT).*?;'
 
-    match = re.search(sql_pattern, unclean_query, re.DOTALL)
+    match = re.search(sql_pattern, unclean_query, re.DOTALL | re.IGNORECASE)
 
     if match:
-        return match.group(1).strip()
+        return match.group(0).strip()
     else:
-        return "No response."
+        return "No valid query found."
 
 
 def query_db (sql_query):
@@ -114,7 +112,9 @@ def run_query_engine (query):
 
     sql_query = get_sql_query_response (prompt)
 
-    data = query_db (sql_query)
+    cleaned_query = clean_sql_query (sql_query)
+
+    data = query_db (cleaned_query)
 
     analysis_prompt = constants.DATA_ANALYST_PROMPT.format (query=query, sql_query=sql_query, data=data)
 

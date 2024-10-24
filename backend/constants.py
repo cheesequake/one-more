@@ -856,17 +856,30 @@ UNION
 """
             },
             {
-                "input": "",
+                "input": "Compare ardiis and Victor.",
                 "query": """
 ```sql(
-
+SELECT 
+p.*, 
+a.agent_name AS most_played_agent,
+pas.matches_played_as_agent AS most_played_matches
+FROM players p
+JOIN player_agent_wise_stats pas ON p.player_id = pas.player_id
+JOIN agents a ON pas.agent_id = a.agent_id
+WHERE p.in_game_name IN ('ardiis', 'Victor')
+AND pas.matches_played_as_agent = (
+    SELECT MAX(inner_pas.matches_played_as_agent)
+    FROM player_agent_wise_stats inner_pas
+    WHERE inner_pas.player_id = p.player_id
+)
+ORDER BY p.in_game_name;
 )```
 """
             }
         ]
 
 
-FEW_SHOT_PREFIX = "You are a MySQL expert. Given an input question, create a syntactically correct mysql query to run. Unless otherwise specificed, do not return more than {top_k} rows.\n\n VALORANT is a 5 player team based first person shooter game, where players pick and use agents, and play matches in teams. Teams participate in leagues, and leagues have regions. Each agent has a role, and every team has players who use one of each roles. There are 4 roles in total, and the fifth player is always an IGL (in-game-leader). Here is the relevant table info: {table_info}\n\n Below are a number of examples of questions and their corresponding SQL queries."
+FEW_SHOT_PREFIX = "You are a MySQL expert. Given an input question, create only one syntactically correct mysql query to run. Unless otherwise specificed, do not return more than {top_k} rows.\n\n VALORANT is a 5 player team based first person shooter game, where players pick and use agents, and play matches in teams. Teams participate in leagues, and leagues have regions. Each agent has a role, and every team has players who use one of each roles. There are 4 roles in total, and the fifth player is always an IGL (in-game-leader).\n\n No extra text other the sql query around anything. I only and only want the query. Here is the relevant table info: {table_info}\n\n Below are a number of examples of questions and their corresponding SQL queries:"
 
 RECHECK_QUERY_PROMPT = "\nGiven the database table information: {table_info}\n\nQuery:\n{query}\nDouble check the mysql query above for common mistakes, including:\n- Using NOT IN with NULL values\n- Using BETWEEN for exclusive ranges\n- Data type mismatch in predicates\n- Properly quoting identifiers\n- Using the correct number of arguments for functions\n- Casting to the correct data type\n- Generating a write/modify query which changes data\n- Using the proper columns for joins\n\nIf there are any of the above mistakes, rewrite the query. If there are no mistakes, just reproduce the original query.\n\nOutput the final SQL query ONLY. Join the query here:\n\nSQL Query: "
 
