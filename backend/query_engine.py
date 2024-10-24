@@ -24,8 +24,12 @@ DB_PASSWORD = os.getenv("DB_PASSWORD")
 DB_NAME = os.getenv("DB_NAME")
 DB_PORT = os.getenv("DB_PORT")
 
+REGION = os.getenv ("REGION")
+SQL_MODEL = os.getenv ("SQL_MODEL")
+FINAL_MODEL = os.getenv ("FINAL_MODEL")
+
 def get_bedrock_client():
-    bedrock_config = botocore.config.Config(read_timeout=900, connect_timeout=900, region_name="ap-south-1")
+    bedrock_config = botocore.config.Config(read_timeout=900, connect_timeout=900, region_name=REGION)
     return boto3.client(
         service_name = "bedrock-runtime",
         config=bedrock_config
@@ -60,7 +64,7 @@ def generate_few_shot_prompt (query):
 def get_sql_query_response (prompt):
     llm_sql = ChatBedrock (
         client=get_bedrock_client (),
-        model="mistral.mistral-large-2402-v1:0",
+        model=SQL_MODEL,
         model_kwargs={"temperature": 0},
     )
 
@@ -101,7 +105,7 @@ def query_db (sql_query):
 def get_final_analysis (prompt):
     llm = ChatBedrock (
         client=get_bedrock_client(),
-        model="meta.llama3-70b-instruct-v1:0",
+        model=FINAL_MODEL,
         model_kwargs={"temperature": 0.2}
     )
 
