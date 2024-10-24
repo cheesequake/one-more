@@ -51,7 +51,6 @@ jobs:
                     DB_PORT=${{ secrets.DB_PORT }}
                     AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
                     AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
-                    FRONTEND_URL=${{ secrets.FRONTEND_URL }}
                     REGION=${{ secrets.REGION }}
                     SQL_MODEL=${{ secrets.SQL_MODEL }}
                     FINAL_MODEL=${{ secrets.FINAL_MODEL }}
