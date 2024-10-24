@@ -53,7 +53,7 @@ def generate_few_shot_prompt (query):
                 example_selector=example_selector,
                 example_prompt=example_prompt,
                 prefix=constants.FEW_SHOT_PREFIX,
-                suffix="Generate an SQL query without extra text for User input: {input}\nSQL query: ",
+                suffix="User input: {input}\nSQL query: ",
                 input_variables=["input", "top_k", "table_info"],
             )
 
@@ -81,17 +81,6 @@ def is_write_query(sql_query: str) -> bool:
 
     return False
 
-def clean_sql_query(unclean_query):
-    sql_pattern = r'(\(?SELECT).*?;'
-
-    match = re.search(sql_pattern, unclean_query, re.DOTALL | re.IGNORECASE)
-
-    if match:
-        return match.group(0).strip()
-    else:
-        return "No valid query found."
-
-
 def query_db (sql_query):
     new_query = get_sql_query_response (constants.RECHECK_QUERY_PROMPT.format (table_info=constants.TABLE_INFO, query=sql_query))
 
@@ -99,8 +88,8 @@ def query_db (sql_query):
         return "No response."
     else:
         db = SQLDatabase.from_uri (f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}")
-        cleaned_query = clean_sql_query (new_query)
-        return (db.run (cleaned_query, include_columns=True))
+
+        return (db.run (new_query, include_columns=True))
 
 def get_final_analysis (prompt):
     llm = ChatBedrock (
@@ -116,9 +105,7 @@ def run_query_engine (query):
 
     sql_query = get_sql_query_response (prompt)
 
-    cleaned_query = clean_sql_query (sql_query)
-
-    data = query_db (cleaned_query)
+    data = query_db (sql_query)
 
     analysis_prompt = constants.DATA_ANALYST_PROMPT.format (query=query, sql_query=sql_query, data=data)
 
