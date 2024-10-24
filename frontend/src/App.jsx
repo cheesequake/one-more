@@ -1,4 +1,4 @@
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import videoBG from "./assets/VideoBackground.mp4"
 import Navbar from "./components/Navbar"
 import Sidebar from "./components/Sidebar"
@@ -12,6 +12,12 @@ import NotFound from "./components/pages/NotFound"
 function App() {
   const videoRef = useRef (null)
   const [muted, setMuted] = useState (true)
+
+  useEffect (() => {
+    if (videoRef.current) {
+      videoRef.current.volume = 0.2
+    }
+  }, [muted])
 
   return (
     <div className="overflow-hidden">

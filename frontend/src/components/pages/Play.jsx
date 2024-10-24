@@ -72,12 +72,12 @@ export default function Play () {
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.75, stiffness: 0 }}
-            className="w-11/12 h-15/16 border-l flex flex-col justify-center items-center border-l-white border-r border-r-white backdrop-blur-lg content bg-slate-100 bg-opacity-25">
+            className="w-11/12 h-15/16 border-l flex flex-col justify-center items-center border-l-white border-r border-r-white backdrop-blur-lg content bg-secondary-riot bg-opacity-25">
                 {!animating &&
                 <>
                     <div className="w-15/16 min-h-5/6 max-h-5/6 overflow-y-scroll flex flex-col">
                         {messages.map ((message, index) => (
-                            <motion.div key={index} className={`p-2 mb-2 text-white break-words self-start max-w-2xl rounded-tr-xl rounded-br-xl rounded-bl-xl flex`}
+                            <motion.div key={index} className={`p-2 mb-2 text-white break-words self-start max-w-3xl rounded-tr-xl rounded-br-xl rounded-bl-xl flex`}
                             initial={{ scale: 0.5, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             transition={{ type: 'spring', stiffness: 300, damping: 20 }}

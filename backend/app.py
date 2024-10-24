@@ -29,6 +29,11 @@ app.add_middleware (
 )
 
 def connect_to_rds ():
+    """
+    connect_to_rds function.
+
+    :return: MySQLConnection object
+    """
     try:
         connection = mysql.connector.connect(
             host=DB_HOST,
@@ -45,17 +50,20 @@ def connect_to_rds ():
         print(f"Error: {e}")
         return None
 
-
-# Get list of teams based on league ID (required parameter)
 @app.get("/teams")
 async def get_teams(leagueId: int = Query(..., description="ID of the league to filter teams")):
+    """
+    get_teams
+
+    :param leagueId: League ID of the league whose teams you want to fetch
+    :return: A JSON array of teams
+    """
     connection = connect_to_rds()
     if not connection:
         raise HTTPException(status_code=500, detail="Unable to connect to the database")
 
     cursor = connection.cursor(dictionary=True)
 
-    # Query to fetch teams by league ID
     query = """
         SELECT *
         FROM teams t
@@ -75,16 +83,19 @@ async def get_teams(leagueId: int = Query(..., description="ID of the league to 
         team['team_id'] = str(team['team_id'])
     return teams
 
-# Get all leagues information
 @app.get("/leagues")
 async def get_league():
+    """
+    get_leagues
+
+    :return: A JSON array of all leagues whose data is available
+    """
     connection = connect_to_rds()
     if not connection:
         raise HTTPException(status_code=500, detail="Unable to connect to the database")
 
     cursor = connection.cursor(dictionary=True)
 
-    # Query to fetch all leagues
     query = "SELECT * FROM leagues"
     cursor.execute(query)
     leagues = cursor.fetchall()
@@ -95,22 +106,25 @@ async def get_league():
     if not leagues:
         raise HTTPException(status_code=404, detail="Leagues not found")
 
-    # Convert league_id (bigint) to string to avoid precision loss in JavaScript
     for league in leagues:
         league['league_id'] = str(league['league_id'])
 
     return leagues
 
-# Get league information by league ID
 @app.get("/leagues/{leagueId}")
 async def get_league(leagueId: int = Path(..., description="ID of the league to retrieve information")):
+    """
+    get_league
+
+    :param leagueId: League ID of the league to be fetched
+    :return: A JSON object of a league
+    """
     connection = connect_to_rds()
     if not connection:
         raise HTTPException(status_code=500, detail="Unable to connect to the database")
 
     cursor = connection.cursor(dictionary=True)
 
-    # Query to fetch league information by league ID
     query = "SELECT * FROM leagues WHERE league_id = %s"
     cursor.execute(query, (leagueId,))
     league = cursor.fetchone()
@@ -124,7 +138,6 @@ async def get_league(leagueId: int = Path(..., description="ID of the league to 
     league['league_id'] = str(league['league_id'])
     return league
 
-# Allowed values for each parameter
 allowedLevels = ["Professional", "Semi-Professional", "Game-Changer"]
 allowedIgls = ["yes", "no", "any"]
 allowedRoles = ["duelist", "initiator", "controller", "sentinel"]
@@ -139,7 +152,16 @@ def get_players(
     sortBy: str = Query(..., description="Field to sort by (e.g., name, kda)"),
     sortOrder: str = Query(..., description="Sort order, either ASC or DESC")
 ):
-    # Validation for each parameter
+    """
+    get_players
+
+    :param level: Level the player plays at
+    :param igl: Whether the player is an IGL or not
+    :param role: The role played by a player in a team
+    :param sortBy: Key to sort the results by
+    :param sortOrder: Ascending or Descending
+    :return: A JSON array of players
+    """
     if level not in allowedLevels:
         raise HTTPException(status_code=400, detail=f"Invalid level. Allowed values: {allowedLevels}")
 
@@ -260,6 +282,12 @@ def get_players(
 
 @app.post("/generate_response")
 async def generate_response(request: QueryRequest):
+    """
+    generate_response
+
+    :param request: a pydantic object which contains the user Query
+    :return: A String containing LLM Response
+    """
     try:
         response = query_engine.run_query_engine (request.query)
         return response

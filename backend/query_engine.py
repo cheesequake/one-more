@@ -32,6 +32,11 @@ SQL_MODEL = os.getenv ("SQL_MODEL")
 FINAL_MODEL = os.getenv ("FINAL_MODEL")
 
 def get_bedrock_client():
+    """
+    get_bedrock_client
+
+    :return: A Boto3 Client with Bedrock Runtime
+    """
     bedrock_config = botocore.config.Config(read_timeout=900, connect_timeout=900, region_name=REGION)
     return boto3.client(
         service_name = "bedrock-runtime",
@@ -41,6 +46,12 @@ def get_bedrock_client():
     )
 
 def generate_few_shot_prompt (query):
+    """
+    generate_few_shot_prompt
+
+    :param query: String containing user query
+    :return: A prompt suitable for few shot prompting
+    """
     try:
         local_embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
 
@@ -67,6 +78,12 @@ def generate_few_shot_prompt (query):
         raise e
 
 def get_sql_query_response (prompt):
+    """
+    get_sql_query_response
+
+    :param prompt: A prompt to be converted to an SQL Query
+    :return: A prompt suitable for few shot prompting
+    """
     llm_sql = ChatBedrock (
         client=get_bedrock_client (),
         model=SQL_MODEL,
@@ -76,6 +93,12 @@ def get_sql_query_response (prompt):
     return llm_sql.invoke (prompt).content
 
 def is_write_query(sql_query: str) -> bool:
+    """
+    is_write_query
+
+    :param sql_query: String containing SQL query
+    :return: Whether the generated SQL query doesn't change any data
+    """
     write_keywords = ['INSERT', 'UPDATE', 'DELETE', 'ALTER', 'DROP', 'CREATE', 'TRUNCATE', 'REPLACE']
 
     cleaned_query = re.sub(r'\s+', ' ', sql_query).strip().upper()
@@ -87,6 +110,12 @@ def is_write_query(sql_query: str) -> bool:
     return False
 
 def query_db (sql_query):
+    """
+    query_db
+
+    :param query: String containing SQL query
+    :return: A string containing database response
+    """
     new_query = get_sql_query_response (constants.RECHECK_QUERY_PROMPT.format (table_info=constants.TABLE_INFO, query=sql_query))
 
     if (is_write_query (new_query)):
@@ -97,6 +126,12 @@ def query_db (sql_query):
         return (db.run (new_query, include_columns=True))
 
 def get_final_analysis (prompt):
+    """
+    get_final_analysis
+
+    :param prompt: A prompt to get the analysis of data from
+    :return: A string containing LLM analysis
+    """
     llm = ChatBedrock (
         client=get_bedrock_client(),
         model=FINAL_MODEL,
@@ -106,6 +141,12 @@ def get_final_analysis (prompt):
     return llm.invoke (prompt).content
 
 def run_query_engine (query):
+    """
+    run_query_engine
+
+    :param query: A user input from a front-end
+    :return: Final output of the LLM(s)
+    """
     prompt = generate_few_shot_prompt (query)
 
     sql_query = get_sql_query_response (prompt)
