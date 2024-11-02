@@ -1,24 +1,18 @@
 from fastapi import FastAPI, Query, HTTPException, Path
 from fastapi.middleware.cors import CORSMiddleware
-import os
-from dotenv import load_dotenv
-import mysql.connector
-from mysql.connector import Error
+
+from database_connection import connect_to_rds
+
 from pydantic import BaseModel
 import query_engine
+from typing import List, Dict, Any
 
-load_dotenv()
-
-DB_HOST = os.getenv("DB_HOST")
-DB_USER = os.getenv("DB_USER")
-DB_PASSWORD = os.getenv("DB_PASSWORD")
-DB_NAME = os.getenv("DB_NAME")
-DB_PORT = os.getenv("DB_PORT")
 
 app = FastAPI()
 
 class QueryRequest(BaseModel):
     query: str
+    team: List[Dict[str, Any]]
 
 app.add_middleware (
     CORSMiddleware,
@@ -27,28 +21,6 @@ app.add_middleware (
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-def connect_to_rds ():
-    """
-    connect_to_rds function.
-
-    :return: MySQLConnection object
-    """
-    try:
-        connection = mysql.connector.connect(
-            host=DB_HOST,
-            user=DB_USER,
-            password=DB_PASSWORD,
-            database=DB_NAME,
-            port=DB_PORT
-        )
-
-        if connection.is_connected():
-            print("Connected to AWS RDS MySQL")
-            return connection
-    except Error as e:
-        print(f"Error: {e}")
-        return None
 
 @app.get("/teams")
 async def get_teams(leagueId: int = Query(..., description="ID of the league to filter teams")):
@@ -289,7 +261,7 @@ async def generate_response(request: QueryRequest):
     :return: A String containing LLM Response
     """
     try:
-        response = query_engine.run_query_engine (request.query)
+        response = query_engine.run_query_engine (request.query, request.team)
         return response
 
     except Exception as e:

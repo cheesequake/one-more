@@ -2,9 +2,9 @@ TABLE_INFO = """
 CREATE TABLE agents (
         agent_id VARCHAR(255) NOT NULL,
         agent_name VARCHAR(50),
-        `role` VARCHAR(50),
+        role VARCHAR(50),
         PRIMARY KEY (agent_id)
-)ENGINE=InnoDB COLLATE utf8mb4_0900_ai_ci DEFAULT CHARSET=utf8mb4
+)
 
 /*
 3 rows from agents table:
@@ -20,14 +20,14 @@ CREATE TABLE leagues (
         league_region VARCHAR(5) NOT NULL,
         league_name VARCHAR(255) NOT NULL,
         PRIMARY KEY (league_id)
-)ENGINE=InnoDB COLLATE utf8mb4_0900_ai_ci DEFAULT CHARSET=utf8mb4
+)
 
 /*
 3 rows from leagues table:
-league_id       league_region    league_name
-105555608835603034      BR        Challengers BR   
-105555627532605797      SEA        Challengers SEA ID
-105555635175479654      NA         Challengers NA
+league_id       league_region       league_name
+105555608835603034      BR          Challengers BR
+105555627532605797      SEA         Challengers SEA ID
+105555635175479654      NA          Challengers NA
 */
 
 
@@ -35,11 +35,11 @@ CREATE TABLE player_agent_wise_stats (
         player_id BIGINT NOT NULL,
         agent_id VARCHAR(255) NOT NULL,
         matches_played_as_agent SMALLINT,
-        `KDA_as_agent` DECIMAL(5, 2),
+        KDA_as_agent DECIMAL(5, 2),
         PRIMARY KEY (player_id, agent_id),
         CONSTRAINT player_agent_wise_stats_ibfk_2 FOREIGN KEY(agent_id) REFERENCES agents (agent_id),
         CONSTRAINT player_agent_wise_stats_ibfk_3 FOREIGN KEY(player_id) REFERENCES players (player_id)
-)ENGINE=InnoDB COLLATE utf8mb4_0900_ai_ci DEFAULT CHARSET=utf8mb4
+)
 
 /*
 3 rows from player_agent_wise_stats table:
@@ -70,8 +70,8 @@ CREATE TABLE players (
         average_defense_first_kills DECIMAL(4, 2),
         average_defense_first_deaths DECIMAL(4, 2),
         gender VARCHAR(20),
-        `attack_KDA` DECIMAL(5, 2),
-        `defense_KDA` DECIMAL(5, 2),
+        attack_KDA DECIMAL(5, 2),
+        defense_KDA DECIMAL(5, 2),
         total_kills SMALLINT,
         total_deaths SMALLINT,
         total_assists SMALLINT,
@@ -79,8 +79,9 @@ CREATE TABLE players (
         most_played_agent_id VARCHAR(255),
         region VARCHAR(255),
         PRIMARY KEY (player_id, home_team_id),
-        CONSTRAINT players_ibfk_1 FOREIGN KEY(home_team_id) REFERENCES teams (team_id)
-)ENGINE=InnoDB COLLATE utf8mb4_0900_ai_ci DEFAULT CHARSET=utf8mb4
+        CONSTRAINT players_ibfk_1 FOREIGN KEY(home_team_id) REFERENCES teams (team_id),
+        CONSTRAINT players_ibfk_2 FOREIGN KEY(most_played_agent_id) REFERENCES agents (agent_id)
+)
 
 /*
 3 rows from players table:
@@ -96,7 +97,7 @@ CREATE TABLE team_league_mapping (
         league_id BIGINT NOT NULL,
         CONSTRAINT team_league_mapping_ibfk_1 FOREIGN KEY(team_id) REFERENCES teams (team_id),
         CONSTRAINT team_league_mapping_ibfk_2 FOREIGN KEY(league_id) REFERENCES leagues (league_id)
-)ENGINE=InnoDB COLLATE utf8mb4_0900_ai_ci DEFAULT CHARSET=utf8mb4
+)
 
 /*
 3 rows from team_league_mapping table:
@@ -112,11 +113,11 @@ CREATE TABLE teams (
         team_acronym VARCHAR(5) NOT NULL,
         team_name VARCHAR(255) NOT NULL,
         PRIMARY KEY (team_id)
-)ENGINE=InnoDB COLLATE utf8mb4_0900_ai_ci DEFAULT CHARSET=utf8mb4
+)
 
 /*
 3 rows from teams table:
-team_id team_acronym    team_name
+team_id     team_acronym    team_name
 105623615126176209      TYP     TYPHOON
 105623673790617219      AUS     Australs
 105623676467282396      WYG     Wygers Argentina
@@ -1095,8 +1096,8 @@ LIMIT 1
         ]
 
 
-FEW_SHOT_PREFIX = "You are a MySQL expert. Given an input question, create only one syntactically correct raw mysql query to run. Unless otherwise specificed, do not return more than {top_k} rows.\n\n VALORANT is a 5 player team based first person shooter game, where players pick and use agents, and play matches in teams. Teams participate in leagues, and leagues have regions. Each agent has a role, and every team has players who use one of each roles. There are 4 roles in total, and the fifth player is always an IGL (in-game-leader).\n\n No extra text other the sql query around anything. I only and only want the query, no extra text Not even formatting. Justp lain, raw query. Here is the relevant table info: {table_info}\n\n Below are a number of examples of questions and their corresponding SQL queries:"
+FEW_SHOT_PREFIX = "You are a MySQL expert. Given an input question, create only one syntactically correct raw mysql query to run. Unless otherwise specificed, do not return more than {top_k} rows.\n\n VALORANT is a 5 player team based first person shooter game, where players pick and use agents, and play matches in teams. Teams participate in leagues, and leagues have regions. Each agent has a role, and every team has players who use one of each roles. There are 4 roles in total, and the fifth player is always an IGL (in-game-leader).\n\n When a player detail is asked, always SELECT p.* along with the player's stats, role, and details on their most_played_agent.\nRemember to use brackets () between two UNION statements. Do not ORDER BY unless asked in user's query. No extra text other the sql query around anything. I only and only want the query, no extra text Not even formatting. Just plain, raw query. Here is the relevant table info: {table_info}\n\n Below are a number of examples of questions and their corresponding SQL queries:"
 
-RECHECK_QUERY_PROMPT = "\nGiven the database table information: {table_info}\n\nQuery:\n{query}\nDouble check the mysql query above for common mistakes, including:\n- Using NOT IN with NULL values\n- Using BETWEEN for exclusive ranges\n- Data type mismatch in predicates\n- Properly quoting identifiers\n- Using the correct number of arguments for functions\n- Casting to the correct data type\n- Generating a write/modify query which changes data\n- Using the proper columns for joins\n\nIf there are any of the above mistakes, rewrite the query. If there are no mistakes, just reproduce the original query.\n\nOutput the final SQL query ONLY, do not explain anything Do not format, just plain raw query. Join the query here:\n\nSQL Query: "
+RECHECK_QUERY_PROMPT = "\nGiven the database table information: {table_info}\n\nQuery:\n{query}\n\nException: {exception}\n\nDouble check the mysql query above for mistakes, including:\n- Using NOT IN with NULL values\n- Using BETWEEN for exclusive ranges\n- Data type mismatch in predicates\n- Properly quoting identifiers\n- Using the correct number of arguments for functions\n- Casting to the correct data type\n- Generating a write/modify query which changes data\n- Using the proper columns for joins\n\nIf there are any of the above mistakes, rewrite the query. If there are no mistakes, just reproduce the original query.\n\nOutput the final SQL query ONLY, do not explain anything Do not format, just plain raw query. Join the query here:\n\nSQL Query: "
 
-DATA_ANALYST_PROMPT = "You are an expert Data Analyst. Here is some information about the data you will be working with:\n\nVALORANT is a team-based first person shooter video game, where players form a team of 5, and plant/defuse the spike and kill their opponents to win. Each player picks an agent, and each agent has a role associated to it. There are 4 kinds of roles:\n- Duelist, the one who takes fights, entries into the spike site, takes the most duels. So, this role has to be high in first kills, compared to first deaths.\n- Initiator, the one who uses utilities to make it easier for the duelists and other players to enter into the site. Their assists are a major factor apart from their KDA's.\n- Controller, the one who smokes or walls off regions in the game to provide support to all players and make it harder for the opposite team to enter into a site. This is a defensive role and their defense related stats matter more.\n- Sentinel, this role is majorly defensive, where they have set abilities which they utilise to set up traps, have special weapons and grenades. They thrive around the site.\n\n 5 players of all roles, and one in game leader form a strong team. Each team then goes on to compete in leagues. Leagues are region-wise. A player belongs to a team, which plays in leagues, which has a region.\n\n Based on the given information, analyse the data below, which has been assigned with the question from the user. Take into consideration each and every stat you can see, into how it would be beneficial for that role. Remember, don't use the word data. You must behave as if this data was in your training set, and not provided by the user. So, do not use phrases like 'According to the data' Start analysing data straight-away. Always call players by their in game name, not real name. No need for wrapper text. Also, do not suggest if any data is missing. Only use what you have. Don't give new suggestions. If no data, no need to analyse. Just apologise and say there are no players which match your description.\nUser: {query}\nSQL Query:{sql_query}\nData: {data}\nDetailed analysis:"
+DATA_ANALYST_PROMPT = "You are an expert Data Analyst with extensive knowledge of VALORANT stats, player roles, and map strategies. Here’s context for analyzing competitive VALORANT performances:\nVALORANT is a team-based, first-person shooter where 5-player teams plant/defuse the spike and eliminate opponents to win. Players select agents, each associated with one of these roles:\n\n- Duelist: Leads in engagements, often first to enter sites. Prioritizes high first kills, low first deaths.\n- Initiator: Uses utilities to ease site entry. Excels in assists.\n- Controller: Limits enemy movement with smokes and walls. Defensive, focusing on stalling enemy entries.\n- Sentinel: Defensive support, gathering intel and anchoring sites to prevent flanking.\n\nEach team needs 5 role players, including an in-game leader, to be successful. Teams compete regionally in leagues, with players belonging to teams that play in these leagues by region.\n\nMaps, each with unique features, affect strategies:\nLotus: 3 sites, attack-favored.\nAscent: 2 sites, defense-heavy.\nBind: 2 sites, defense-heavy.\nSplit: 2 sites, defense-favored.\nSunset: 2 sites, balanced.\nIcebox: 2 sites, attack-favored.\nBreeze: 2 sites, attack-favored.\nFracture: 2 sites, balanced.\nAbyss: 2 sites, attack-favored.\nPearl: 2 sites, attack-favored.\nHaven: 3 sites, slightly attack-favored.\n\nWith average performance benchmarks:\n- Combat Score: 191.74\n- Headshot Rate: 26.02%\n- Attack first kills/deaths: 0.89 / 1.13\n- Defense first kills/deaths: 1.06 / 0.96\n\nUsing this as reference, analyze each player’s stats with the following goals:\nEvaluate each player’s role effectiveness based on inferred stats, highlight strengths, and call out areas for improvement, in an extremely detailed manner.\nIdentify suitable maps and strategies for players and teams.\nConfidence in Data: Treat every stat as actual; infer meaning without referring to column names or mentioning 'data.'\nZero Values: Confidently interpret a value of 0 as fact (e.g., 'this player has not played any matches'). Zero values don't mean a lack of data.\nDirectly analyze, referring to players by in-game names only, and analyse properly, using long sentences. Use Markdown formatting.\n\nThis is the history of teams previously formed, for added context. Only use this when follow-up questions are asked: {team}\nThis is the team previous to the question. Only use this data if asked in the User Query. \n\nNever mention anything about SQL Query, or 'data'. You must always strictly behave as if this is your training data and not any SQL data.\n\nUser Query: {query}\nSQL Query: {sql_query}\nData: {data}\n\nDetailed analysis:"

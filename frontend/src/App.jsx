@@ -8,6 +8,7 @@ import Play from "./components/pages/Play"
 import Players from "./components/pages/Players"
 import Teams from "./components/pages/Teams"
 import NotFound from "./components/pages/NotFound"
+import RightBar from "./components/RightBar"
 
 function App() {
   const videoRef = useRef (null)
@@ -25,7 +26,7 @@ function App() {
       <Navbar muted={muted} setMuted={setMuted} />
       <div className="w-full min-h-90vh h-90vh flex justify-center items-start">
         <Sidebar />
-        <div className="w-4/5 h-full flex justify-center items-center font-FF-Mark font-normal">
+        <div className="w-24/32 h-full flex justify-center items-center font-FF-Mark font-normal">
             <Routes>
               <Route path="/" element={null} />
               <Route path="/about" element={<About />} />
@@ -37,6 +38,7 @@ function App() {
               <Route path="*" element={<Navigate to="/not-found" />} />
             </Routes>
         </div>
+        <RightBar />
       </div>
     </div>
   )

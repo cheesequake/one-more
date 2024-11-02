@@ -3,11 +3,16 @@ import botocore
 
 import constants
 
+from database_connection import connect_to_rds
+
+from decimal import Decimal
 from dotenv import load_dotenv
 
+import json
+
 from langchain_aws import ChatBedrock
+from langchain_aws import ChatBedrockConverse
 from langchain_community.vectorstores import FAISS
-from langchain_community.utilities.sql_database import SQLDatabase
 from langchain_core.example_selectors import SemanticSimilarityExampleSelector
 from langchain_core.prompts import FewShotPromptTemplate, PromptTemplate
 from langchain_huggingface import HuggingFaceEmbeddings
@@ -107,23 +112,62 @@ def is_write_query(sql_query: str) -> bool:
         if re.search(rf'\b{keyword}\b', cleaned_query):
             return True
 
-    return False
+    return 
 
-def query_db (sql_query):
+def recheck_query (sql_query, exception):
+    """
+    recheck_query
+
+    :param sql_query: String containing SQL query
+    :param exception: Exception which occurred
+    :return: An SQL query
+    """
+    new_query = get_sql_query_response(constants.RECHECK_QUERY_PROMPT.format(table_info=constants.TABLE_INFO, query=sql_query, exception=exception))
+
+    return new_query
+
+def query_db(sql_query):
     """
     query_db
 
-    :param query: String containing SQL query
-    :return: A string containing database response
+    :param sql_query: String containing SQL query
+    :return: A JSON string containing database response
     """
-    new_query = get_sql_query_response (constants.RECHECK_QUERY_PROMPT.format (table_info=constants.TABLE_INFO, query=sql_query))
+    if is_write_query(sql_query):
+        return json.dumps({"response": "No response as write operations detected."})
 
-    if (is_write_query (new_query)):
-        return "No response."
-    else:
-        db = SQLDatabase.from_uri (f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}")
+    # Establish connection and run the query using a cursor
+    connection = connect_to_rds()
+    cursor = connection.cursor()
 
-        return (db.run (new_query, include_columns=True))
+    try:
+        # Execute the query and fetch results
+        cursor.execute(sql_query)
+        columns = [col[0] for col in cursor.description]  # Get column names
+        result = [dict(zip(columns, row)) for row in cursor.fetchall()]  # Convert to list of dictionaries
+
+    finally:
+        # Ensure resources are closed
+        cursor.close()
+        connection.close()
+
+    def make_json_serializable(data):
+        if isinstance(data, list):
+            return [make_json_serializable(item) for item in data]
+        elif isinstance(data, dict):
+            return {key: make_json_serializable(value) for key, value in data.items()}
+        elif isinstance(data, Decimal):
+            return float(data)
+        elif hasattr(data, "isoformat"):
+            return data.isoformat()
+        else:
+            return data
+
+    # Make the result JSON serializable
+    serializable_result = make_json_serializable(result)
+
+    # Return the JSON-encoded string
+    return json.dumps(serializable_result)
 
 def get_final_analysis (prompt):
     """
@@ -132,29 +176,47 @@ def get_final_analysis (prompt):
     :param prompt: A prompt to get the analysis of data from
     :return: A string containing LLM analysis
     """
-    llm = ChatBedrock (
+    llm = ChatBedrockConverse (
         client=get_bedrock_client(),
         model=FINAL_MODEL,
-        model_kwargs={"temperature": 0.2}
+        temperature=0.2,
+        max_tokens=4096
     )
 
     return llm.invoke (prompt).content
 
-def run_query_engine (query):
+def run_query_engine (query, team):
     """
     run_query_engine
 
     :param query: A user input from a front-end
     :return: Final output of the LLM(s)
     """
-    prompt = generate_few_shot_prompt (query)
+    prompt = generate_few_shot_prompt(query)
+    sql_query = get_sql_query_response(prompt)
+    rechecked_sql_query = sql_query  # Initialize rechecked_sql_query to the initial SQL query
+    print(sql_query)
 
-    sql_query = get_sql_query_response (prompt)
-    print (sql_query)
-    data = query_db (sql_query)
+    try:
+        # Attempt to fetch data using the initial SQL query
+        data = query_db(sql_query)
+    except Exception as e:
+        print(f"Exception encountered: {e}")
 
-    analysis_prompt = constants.DATA_ANALYST_PROMPT.format (query=query, sql_query=sql_query, data=data)
+        # If an exception occurs, run the recheck pipeline
+        rechecked_sql_query = recheck_query(sql_query, str(e))  # Update rechecked_sql_query
+        try:
+            data = query_db(rechecked_sql_query)
+        except Exception as recheck_exception:
+            # If rechecking also fails, handle as appropriate (e.g., log or return error)
+            print(f"Recheck query failed: {recheck_exception}")
+            return {"error": "Query failed after rechecking."}
 
-    final_response = get_final_analysis (analysis_prompt)
+        print(rechecked_sql_query)
+        print(data)
 
-    return final_response
+    # After successfully fetching data (either initially or after rechecking), proceed with analysis
+    analysis_prompt = constants.DATA_ANALYST_PROMPT.format(query=query, sql_query=rechecked_sql_query, data=data, team=team)
+    final_response = get_final_analysis(analysis_prompt)
+
+    return {"output": final_response, "data": data}

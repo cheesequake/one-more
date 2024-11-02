@@ -256,12 +256,12 @@ export default function Players () {
                     </div>
                 </div>
                 <div className="w-full h-14/16 flex justify-between items-center">
-                    <div className="w-2/16 h-full flex flex-col justify-start items-center overflow-y-scroll">
+                    <div className="w-4/32 h-full flex flex-col justify-start items-center overflow-y-scroll">
                         {!isLoading ? filteredPlayers.map ((player) => (
                             <PlayerElement key={player.player_id + "" + player.team_acronym} player={player} setSelectedPlayer={setSelectedPlayer} />
                         )) : <div className="w-full flex justify-center items-center"><img className="h-1/3" src={loadingAnimation} /></div>}
                     </div>
-                    <div className="w-13/16 h-full">
+                    <div className="w-26/32 h-full">
                         {selectedPlayer && <SelectedPlayerElement player={selectedPlayer} />}
                     </div>
                 </div>
