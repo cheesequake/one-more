@@ -48,10 +48,9 @@ export default function RightBar () {
 
                     </div></>}
                 </div>}
-                {team && team.map ((player) => {
+                {team && team.map ((player, index) => {
                     return (
-                        player.player_id && (<RightPlayerElement key={player.player_id} player={player} isExpanded={isExpanded} />)
-                    )
+                        <RightPlayerElement key={index} player={player} isExpanded={isExpanded} />)
                 })}
             </motion.div>
         </AnimatePresence>

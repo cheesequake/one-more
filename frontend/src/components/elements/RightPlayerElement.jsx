@@ -25,6 +25,7 @@ import Deadlock from "../../assets/Deadlock_icon.webp";
 import Iso from "../../assets/Iso_icon.webp";
 import Clove from "../../assets/Clove_icon.webp";
 import Vyse from "../../assets/Vyse_icon.webp";
+import Undefined from "../../assets/Undefined.webp"
 import crown from "../../assets/crown.png"
 
 const agentImageMap = {
@@ -52,26 +53,28 @@ const agentImageMap = {
     "Deadlock": Deadlock,
     "Iso": Iso,
     "Clove": Clove,
-    "Vyse": Vyse
+    "Vyse": Vyse,
+    "Undefined": Undefined
 };
 
 export default function RightPlayerElement ({ player , isExpanded}) {
-    const agentImage = agentImageMap[player.agent_name]
+    const agentName = player.agent_name ? player.agent_name : "Undefined"
+    const agentImage = agentImageMap[agentName]
 
     return (
         <AnimatePresence>
-            <motion.div key={player.player_id} className="w-full my-1 flex flex-col justify-start items-start bg-slate-700 bg-opacity-75 py-1">
+            <motion.div key={player.assigned_role} className="w-full my-1 flex flex-col justify-start items-start bg-slate-700 bg-opacity-75 py-1">
                 <div className="w-full flex justify-start items-center cursor-default" >
                     <div className="bg-slate-600 bg-opacity-75 w-12 flex justify-center items-center">
                         <img src={agentImage} className="w-11" />
                     </div>
                     {isExpanded && <div className="flex flex-col ml-2 justify-between items-center">
                         <div className="flex justify-center items-center font-semibold">
-                            {player.in_game_name}
-                            {player.in_game_leader === 1 && <img src={crown} className="w-4 ml-2" />}
+                            {player.in_game_name ? player.in_game_name : ""}
+                            { player.in_game_leader === 1 && player.in_game_name && <img src={crown} className="w-4 ml-2" />}
                         </div>
                         <div className="flex justify-center items-center text-teal-200 font-semibold text-xs">
-                            In Party (Competitive)
+                            {player.in_game_name && "In Party (Competitive)"}
                         </div>
                     </div>}
                 </div>

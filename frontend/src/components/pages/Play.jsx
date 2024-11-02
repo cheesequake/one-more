@@ -57,10 +57,11 @@ export default function Play () {
                 console.log (response.data.data)
                 console.log ("length "+ response.data.data.length)
 
-                if (Array.isArray(response.data.data)) {
+                if (Array.isArray(response.data.data) && response.data.data.length <= 5) {
+                    // Define the roles and initialize with null if `team` is not yet set
                     const roles = { Duelist: null, Initiator: null, Controller: null, Sentinel: null, IGL: null };
-                
-                    // Step 1: Process the incoming players and assign them to their roles
+
+                    // Step 1: Process the incoming players and assign them to their roles in `roles`
                     response.data.data.forEach(player => {
                         if (player.in_game_name && player.agent_name) {
                             if ((player.assigned_role === 'duelist' || player.role === 'duelist') && !roles.Duelist) {
@@ -76,19 +77,21 @@ export default function Play () {
                             }
                         }
                     });
-
-                    console.log (roles.Controller)
                 
-                    // Step 2: Update or initialize the team context
+                    // Step 2: Initialize or update `team` with the roles data
                     let updatedTeam;
-                
                     if (!team || team.length === 0) {
-                        // If no team exists, initialize the team with the players from the response
-                        updatedTeam = Object.values(roles).filter(role => role !== null);
+                        // Initialize `team` with empty slots for all roles if it doesn't exist
+                        updatedTeam = [
+                            roles.Duelist || { assigned_role: 'duelist' },
+                            roles.Initiator || { assigned_role: 'initiator' },
+                            roles.Controller || { assigned_role: 'controller' },
+                            roles.Sentinel || { assigned_role: 'sentinel' },
+                            roles.IGL || { in_game_leader: 1 }
+                        ];
                     } else {
-                        // If a team exists, replace players in the team with matching roles from the response
+                        // Replace players in `team` by matching roles if team already exists
                         updatedTeam = team.map(player => {
-                            // Match the player's role in the team with the new roles data
                             if (player.assigned_role === 'duelist' || player.role === 'duelist') {
                                 return roles.Duelist ? { ...player, ...roles.Duelist } : player;
                             } else if (player.assigned_role === 'initiator' || player.role === 'initiator') {
@@ -103,10 +106,11 @@ export default function Play () {
                             return player; // Keep existing player if no role match
                         });
                     }
-                
+
                     // Dispatch the updated team
                     teamDispatch({ type: 'SET', payload: updatedTeam });
                 }
+                
 
                 setLock (false)
             }
