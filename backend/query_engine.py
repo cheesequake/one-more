@@ -185,7 +185,7 @@ def get_final_analysis (prompt):
 
     return llm.invoke (prompt).content
 
-def run_query_engine (query, team):
+def run_query_engine(query, team):
     """
     run_query_engine
 
@@ -194,28 +194,26 @@ def run_query_engine (query, team):
     """
     prompt = generate_few_shot_prompt(query)
     sql_query = get_sql_query_response(prompt)
-    rechecked_sql_query = sql_query  # Initialize rechecked_sql_query to the initial SQL query
+    rechecked_sql_query = sql_query
     print(sql_query)
 
-    try:
-        # Attempt to fetch data using the initial SQL query
-        data = query_db(sql_query)
-    except Exception as e:
-        print(f"Exception encountered: {e}")
+    max_attempts = 5
+    attempt = 0
 
-        # If an exception occurs, run the recheck pipeline
-        rechecked_sql_query = recheck_query(sql_query, str(e))  # Update rechecked_sql_query
+    while attempt < max_attempts:
         try:
             data = query_db(rechecked_sql_query)
-        except Exception as recheck_exception:
-            # If rechecking also fails, handle as appropriate (e.g., log or return error)
-            print(f"Recheck query failed: {recheck_exception}")
-            return {"error": "Query failed after rechecking."}
+            break
+        except Exception as e:
+            print(f"Attempt {attempt + 1} failed: {e}")
+            attempt += 1
 
-        print(rechecked_sql_query)
-        print(data)
+            if attempt == max_attempts:
+                return {"error": "Query failed after multiple rechecking attempts."}
 
-    # After successfully fetching data (either initially or after rechecking), proceed with analysis
+            rechecked_sql_query = recheck_query(rechecked_sql_query, str(e))
+            print(f"Rechecked SQL query (attempt {attempt}): {rechecked_sql_query}")
+
     analysis_prompt = constants.DATA_ANALYST_PROMPT.format(query=query, sql_query=rechecked_sql_query, data=data, team=team)
     final_response = get_final_analysis(analysis_prompt)
 

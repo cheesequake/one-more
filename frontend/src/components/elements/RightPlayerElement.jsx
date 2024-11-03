@@ -58,7 +58,8 @@ const agentImageMap = {
 };
 
 export default function RightPlayerElement ({ player , isExpanded}) {
-    const agentName = player.agent_name ? player.agent_name : "Undefined"
+    const agentName = player.agent_name ? player.agent_name : (player.most_played_agent ? player.most_played_agent : "Undefined");
+    console.log (player)
     const agentImage = agentImageMap[agentName]
 
     return (

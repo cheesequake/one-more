@@ -52,10 +52,7 @@ export default function Play () {
                         { sender: 'AI', text: response.data.output }
                     ]
                 });
-                console.log ("WTF")
                 response.data.data = JSON.parse(response.data.data);
-                console.log (response.data.data)
-                console.log ("length "+ response.data.data.length)
 
                 if (Array.isArray(response.data.data) && response.data.data.length <= 5) {
                     // Define the roles and initialize with null if `team` is not yet set
@@ -63,7 +60,7 @@ export default function Play () {
 
                     // Step 1: Process the incoming players and assign them to their roles in `roles`
                     response.data.data.forEach(player => {
-                        if (player.in_game_name && player.agent_name) {
+                        if (player.in_game_name && (player.agent_name || player.most_played_agent)) {
                             if ((player.assigned_role === 'duelist' || player.role === 'duelist') && !roles.Duelist) {
                                 roles.Duelist = player;
                             } else if ((player.assigned_role === 'initiator' || player.role === 'initiator') && !roles.Initiator) {
@@ -90,20 +87,19 @@ export default function Play () {
                             roles.IGL || { in_game_leader: 1 }
                         ];
                     } else {
-                        // Replace players in `team` by matching roles if team already exists
                         updatedTeam = team.map(player => {
                             if (player.assigned_role === 'duelist' || player.role === 'duelist') {
-                                return roles.Duelist ? { ...player, ...roles.Duelist } : player;
+                                return roles.Duelist || player;
                             } else if (player.assigned_role === 'initiator' || player.role === 'initiator') {
-                                return roles.Initiator ? { ...player, ...roles.Initiator } : player;
+                                return roles.Initiator || player;
                             } else if (player.assigned_role === 'controller' || player.role === 'controller') {
-                                return roles.Controller ? { ...player, ...roles.Controller } : player;
+                                return roles.Controller || player;
                             } else if (player.assigned_role === 'sentinel' || player.role === 'sentinel') {
-                                return roles.Sentinel ? { ...player, ...roles.Sentinel } : player;
+                                return roles.Sentinel || player;
                             } else if (player.in_game_leader === 1) {
-                                return roles.IGL ? { ...player, ...roles.IGL } : player;
+                                return roles.IGL || player;
                             }
-                            return player; // Keep existing player if no role match
+                            return player;
                         });
                     }
 
