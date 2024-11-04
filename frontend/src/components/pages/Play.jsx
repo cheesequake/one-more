@@ -61,7 +61,9 @@ export default function Play () {
                     // Step 1: Process the incoming players and assign them to their roles in `roles`
                     response.data.data.forEach(player => {
                         if (player.in_game_name && (player.agent_name || player.most_played_agent)) {
-                            if ((player.assigned_role === 'duelist' || player.role === 'duelist') && !roles.Duelist) {
+                            if (player.in_game_leader === 1 && !roles.IGL) {
+                                roles.IGL = player;
+                            } else if ((player.assigned_role === 'duelist' || player.role === 'duelist') && !roles.Duelist) {
                                 roles.Duelist = player;
                             } else if ((player.assigned_role === 'initiator' || player.role === 'initiator') && !roles.Initiator) {
                                 roles.Initiator = player;
@@ -69,12 +71,10 @@ export default function Play () {
                                 roles.Controller = player;
                             } else if ((player.assigned_role === 'sentinel' || player.role === 'sentinel') && !roles.Sentinel) {
                                 roles.Sentinel = player;
-                            } else if (player.in_game_leader === 1 && !roles.IGL) {
-                                roles.IGL = player;
                             }
                         }
                     });
-                
+
                     // Step 2: Initialize or update `team` with the roles data
                     let updatedTeam;
                     if (!team || team.length === 0) {
@@ -88,7 +88,10 @@ export default function Play () {
                         ];
                     } else {
                         updatedTeam = team.map(player => {
-                            if (player.assigned_role === 'duelist' || player.role === 'duelist') {
+                            if (player.in_game_leader === 1) {
+                                return roles.IGL || player;
+                            }
+                            else if (player.assigned_role === 'duelist' || player.role === 'duelist') {
                                 return roles.Duelist || player;
                             } else if (player.assigned_role === 'initiator' || player.role === 'initiator') {
                                 return roles.Initiator || player;
@@ -96,8 +99,6 @@ export default function Play () {
                                 return roles.Controller || player;
                             } else if (player.assigned_role === 'sentinel' || player.role === 'sentinel') {
                                 return roles.Sentinel || player;
-                            } else if (player.in_game_leader === 1) {
-                                return roles.IGL || player;
                             }
                             return player;
                         });
