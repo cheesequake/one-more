@@ -196,12 +196,15 @@ def run_query_engine(query, team):
     sql_query = get_sql_query_response(prompt)
     rechecked_sql_query = sql_query
     print(sql_query)
+    data = ""
 
     max_attempts = 5
     attempt = 0
 
     while attempt < max_attempts:
         try:
+            if (rechecked_sql_query == ""):
+                break
             data = query_db(rechecked_sql_query)
             break
         except Exception as e:
