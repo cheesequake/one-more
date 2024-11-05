@@ -48,7 +48,11 @@ This assistant is able to filter players and teams, form teams from your prompts
 - The LLM workflow is pretty simple. First, the user's question is used to get some few-shot prompts, which have good SQL examples for the LLM to refer to. Then, again, the generated SQL query is sent to the LLM to verify any syntax errors and data manipulation motives. Finally, the SQL query fetches results from the database and these results are again fed into an LLM to elaborate.
 
 ## Reasons for data querying implementation
-Both Amazon EC2 and Amazon RDS MySQL offer Free Tiers to accounts eligible. This was the cheapest way I could think of to implement this chatbot. Using EC2 Free Tier significantly reduced costs for Lambda, Agents, Secrets, and API Gateway, whereas using RDS MySQL Free Tier significantly reduced costs for Athena, Glue and/or OpenSearch service knowledge bases. 
+Both Amazon EC2 and Amazon RDS MySQL offer Free Tiers to accounts eligible. This was the cheapest way I could think of to implement this chatbot. Using EC2 Free Tier significantly reduced costs for Lambda, Agents, Secrets, and API Gateway, whereas using RDS MySQL Free Tier significantly reduced costs for Athena, Glue and/or OpenSearch service knowledge bases.
+
+## Let's talk data
+All games were looped through and stats were extracted from each game in the S3 bucket. The stats are mentioned in the picture below. Agent wise stats, KDA, attacking and defensive KDA, headshot percentage, aces, 4ks, pistol and operator kills, all have been accounted for. The reason for omitting win count and win rate is that these stats are dependent more on the team as a whole, not the player individually. Also, not mapping player kill locations was a decision taken by me, because all players should be able to kill in all areas of the map. Having a 'favourite' area doesn't make sense, especially because maps keep changing and new maps keep getting added. This was also a reason not to count map wins. Hopefully my reasoning makes sense! :D
+![database](./database.png)
 
 ## Challenges I ran into
 - Initially the database was very complex, so it was a challenge for LLM models to generate SQL queries.

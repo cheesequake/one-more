@@ -50,11 +50,12 @@ def get_bedrock_client():
         aws_secret_access_key = AWS_SECRET_ACCESS_KEY
     )
 
-def generate_few_shot_prompt (query):
+def generate_few_shot_prompt (query, team):
     """
     generate_few_shot_prompt
 
     :param query: String containing user query
+    :param team: String containing context team data
     :return: A prompt suitable for few shot prompting
     """
     try:
@@ -75,10 +76,10 @@ def generate_few_shot_prompt (query):
                 example_prompt=example_prompt,
                 prefix=constants.FEW_SHOT_PREFIX,
                 suffix="User input: {input}\nSQL query: ",
-                input_variables=["input", "top_k", "table_info"],
+                input_variables=["input", "top_k", "table_info", "team"],
             )
 
-        return prompt.format(input=query, top_k=5, table_info=constants.TABLE_INFO)
+        return prompt.format(input=query, top_k=5, table_info=constants.TABLE_INFO, team=team)
     except Exception as e:
         raise e
 
@@ -192,7 +193,7 @@ def run_query_engine(query, team):
     :param query: A user input from a front-end
     :return: Final output of the LLM(s)
     """
-    prompt = generate_few_shot_prompt(query)
+    prompt = generate_few_shot_prompt(query, team)
     sql_query = get_sql_query_response(prompt)
     rechecked_sql_query = sql_query
     print(sql_query)

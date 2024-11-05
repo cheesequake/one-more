@@ -55,6 +55,20 @@ export default function Play () {
                 response.data.data = JSON.parse(response.data.data);
 
                 if (Array.isArray(response.data.data) && response.data.data.length <= 5) {
+                    const playerIdentifiers = new Set();
+                    const hasDuplicates = response.data.data.some(player => {
+                        const uniqueIdentifier = player.id || player.in_game_name; // Use `id` or `in_game_name`
+                        if (playerIdentifiers.has(uniqueIdentifier)) {
+                            return true; // Duplicate found
+                        }
+                        playerIdentifiers.add(uniqueIdentifier);
+                        return false;
+                    });
+
+                    if (hasDuplicates) {
+                        console.warn("Duplicate players found; replacement aborted.");
+                        return; // Exit early, no replacement
+                    }
                     // Define the roles and initialize with null if `team` is not yet set
                     const roles = { Duelist: null, Initiator: null, Controller: null, Sentinel: null, IGL: null };
 
@@ -87,17 +101,27 @@ export default function Play () {
                             roles.IGL || { in_game_leader: 1 }
                         ];
                     } else {
-                        updatedTeam = team.map(player => {
-                            if (player.assigned_role === 'duelist' || player.role === 'duelist') {
-                                return roles.Duelist || player;
-                            } else if (player.assigned_role === 'initiator' || player.role === 'initiator') {
-                                return roles.Initiator || player;
-                            } else if (player.assigned_role === 'controller' || player.role === 'controller') {
-                                return roles.Controller || player;
-                            } else if (player.assigned_role === 'sentinel' || player.role === 'sentinel') {
-                                return roles.Sentinel || player;
-                            } else if (player.in_game_leader === 1) {
-                                return roles.IGL || player;
+                        updatedTeam = team.map((player, index) => {
+                            if (roles.Duelist && (player.assigned_role === 'duelist' || player.role === 'duelist')) {
+                                const replacement = roles.Duelist;
+                                roles.Duelist = null; // Set to null after assignment to avoid reassigning
+                                return replacement;
+                            } else if (roles.Initiator && (player.assigned_role === 'initiator' || player.role === 'initiator')) {
+                                const replacement = roles.Initiator;
+                                roles.Initiator = null;
+                                return replacement;
+                            } else if (roles.Controller && (player.assigned_role === 'controller' || player.role === 'controller')) {
+                                const replacement = roles.Controller;
+                                roles.Controller = null;
+                                return replacement;
+                            } else if (roles.Sentinel && (player.assigned_role === 'sentinel' || player.role === 'sentinel')) {
+                                const replacement = roles.Sentinel;
+                                roles.Sentinel = null;
+                                return replacement;
+                            } else if (roles.IGL && player.in_game_leader === 1) {
+                                const replacement = roles.IGL;
+                                roles.IGL = null;
+                                return replacement;
                             }
                             return player;
                         });
